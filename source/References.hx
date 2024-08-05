@@ -18,8 +18,8 @@ class References
 
     /**
      * Moreso to make it easier to include
-     * @param forceGrab 
-     * @return Array<Array<String>>
+     * @param forceGrab whether to force it to show the secret song.
+     * @return `Array<Array<String>>`
      */
     public static function getLegacyWarpSongs(forceGrab:Bool):Array<Array<String>>
     {
