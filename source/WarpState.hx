@@ -49,6 +49,7 @@ class WarpState extends MusicBeatState
 	var effect:SMWPixelBlurShader;
 	public static var blackScreen:FlxSprite;
 	final starNeed:Array<Int> = [3, 7, 5, 6, 3];
+	public static var local_filtersEnabled:Bool = true;
 
 	private var grpOptions:FlxTypedGroup<Alphabet>;
 	private var iconArray:Array<AttachedSprite> = [];
@@ -337,6 +338,7 @@ class WarpState extends MusicBeatState
 		//	} catch (e) {
 		//	trace(e.message);
 		//	}
+		FlxG.camera.filtersEnabled = local_filtersEnabled;
 	}
 
 	var datos:String = '';
@@ -346,7 +348,10 @@ class WarpState extends MusicBeatState
 
 	override function update(elapsed:Float)
 	{
-
+		if (FlxG.keys.justPressed.F3) {
+			FlxG.camera.filtersEnabled = !FlxG.camera.filtersEnabled;
+		}
+		local_filtersEnabled = FlxG.camera.filtersEnabled;
 		if (!debugmode)
 		{
 			if (FlxG.keys.justPressed.ONE)
@@ -1137,6 +1142,7 @@ class WorldState extends MusicBeatSubstate
 			camWorld.deadzone.height -= 100;
 			camWorld.deadzone.width = 0;
 		}
+		camWorld.filtersEnabled = WarpState.local_filtersEnabled;
 	}
 
 	var quieto:Bool = false;
@@ -1152,7 +1158,10 @@ class WorldState extends MusicBeatSubstate
 
 	override function update(elapsed:Float)
 		{
-
+			if (FlxG.keys.justPressed.F3) {
+				camWorld.filtersEnabled = !camWorld.filtersEnabled; // Act as a toggle lmao
+			}
+			WarpState.local_filtersEnabled = camWorld.filtersEnabled;
 			if (!debugmode)
 			{	
 				pibeback.setPosition(pibemapa.x + 18, pibemapa.y + 6);
@@ -2008,6 +2017,10 @@ class UltraState extends MusicBeatSubstate
 	var mov:Float = 1;
 	var datos:String = '';
 	override function update(elapsed:Float) {
+		if (FlxG.keys.justPressed.F3) {
+			camWorld.filtersEnabled = !camWorld.filtersEnabled; // Act as a toggle lmao
+		}
+		WarpState.local_filtersEnabled = camWorld.filtersEnabled;
 		if (!debugmode)
 			{
 				#if debug

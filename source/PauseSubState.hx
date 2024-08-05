@@ -66,6 +66,7 @@ class PauseSubState extends MusicBeatSubstate
 	public static var restY:Int;
 
 	public static var transCamera:FlxCamera;
+	var testArray:Array<String>;
 
 	public static var pausemusic:String = 'breakfast1';
 	var staticShader:TVStatic;
@@ -161,6 +162,7 @@ class PauseSubState extends MusicBeatSubstate
 		}
 		var muestralol:Array<String> = ['El pepe', 'ete sech'];
 
+
 		muestralol = CoolUtil.coolTextFile(txtdesc);
 
 		if (PlayState.isStoryMode)
@@ -190,6 +192,19 @@ class PauseSubState extends MusicBeatSubstate
 		levelDifficulty.setFormat(Paths.font('mariones.ttf'), 17);
 		levelDifficulty.updateHitbox();
 		add(levelDifficulty);
+		
+		var formattedSong = Paths.formatToSongPath(PlayState.SONG.song.toLowerCase()).trim();
+		if (Std.string(muestralol) == '[]' || muestralol == null)
+		{
+		if (muymalo > 1)
+		{
+			muestralol = References.legacyWarpWorkaround(formattedSong, muymalo);
+		}
+		else
+		{
+			muestralol = References.legacyWarpWorkaround(formattedSong, null);
+		}
+		}
 
 		creditsTxt = new FlxText(566, levelDifficulty.y + 40, 700, "", 12);
 		creditsTxt.text = muestralol[1];
@@ -208,6 +223,7 @@ class PauseSubState extends MusicBeatSubstate
 		descAll.text = muestralol[0];
 		descAll.setFormat(Paths.font("mariones.ttf"), 17);
 		add(descAll);
+		//trace('muestralol: $muestralol\ntengo: $tengo\n formattedSong: $formattedSong');
 
 		var blueballedTxt:FlxText = new FlxText(566, 15 + 64, 0, "", 32);
 		blueballedTxt.text = "Blueballed: " + PlayState.deathCounter;
@@ -570,6 +586,10 @@ class PauseSubState extends MusicBeatSubstate
 							if (PlayState.isWarp)
 							{
 								MusicBeatState.switchState(new WarpState());
+							}
+							else if (PlayState.isLegacyWarp) {
+								PlayState.doLegacyWarpCheck();
+								//close();
 							}
 							else
 							{

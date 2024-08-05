@@ -17,30 +17,25 @@ import lime.utils.Assets;
 
 using StringTools;
 
-class WarpState extends MusicBeatState
+class WarpStateLegacy extends MusicBeatState //I WANNA SEE LEMME SEE
 {
 	var tween:FlxTween;
 	var tween2:FlxTween;
-	var curSelected:Int = 0;
+	public static var curSelected:Int = 0;
 
 	private var grpOptions:FlxTypedGroup<Alphabet>;
 	private var iconArray:Array<AttachedSprite> = [];
 
-	private static var canciones:Array<Dynamic> = [
-		// Name, song name
-		['World 2', 'i-hate-you'],
-		['World 3', 'alone'],
-		['World 4', 'apparition'],
-		['World 5', 'powerdown'],
-	];
+	public static var canciones:Array<Dynamic> = References.getLegacyWarpSongs(false);
 
 	var bg:FlxSprite;
 	var pibemapa:FlxSprite;
+	var warpPipe:FlxSprite;
 	var cartel:FlxSprite;
 	var descText:FlxText;
 	var intendedColor:Int;
 	var colorTween:FlxTween;
-
+	var msg:FlxText;
 	override function create()
 	{
 		#if desktop
@@ -48,6 +43,29 @@ class WarpState extends MusicBeatState
 		DiscordClient.changePresence("In the Warp Zone", null);
 		#end
 		FlxG.sound.playMusic(Paths.music('warp theme'), 0.7);
+
+		if (ClientPrefs.storySave == [true, true, true, true, true, true, true, true, true, false] || ClientPrefs.storySave == [true, true, true, true, true, true, true, true, true, true])
+		{
+			if (ClientPrefs.firstSecretView == true) {
+				if (!ClientPrefs.unlockedSecretSong){
+					ClientPrefs.unlockedSecretSong = true;
+					trace('Unlocking Secret Song!');
+					ClientPrefs.saveSettings();
+					canciones = References.getLegacyWarpSongs(true);
+					curSelected = 7;
+				}
+			}
+		} else {
+			if (ClientPrefs.unlockedSecretSong == true || ClientPrefs.firstSecretView == false) {
+				trace('Not Enough Story Progress To Unlock Secret Song!');
+				ClientPrefs.firstSecretView = true; // just in case testing f'd it up.
+				ClientPrefs.unlockedSecretSong = false; // just in case testing f'd it up.
+				ClientPrefs.saveSettings();
+				canciones = References.getLegacyWarpSongs(false);
+			}
+		}
+
+		openfl.Lib.application.window.title = 'Friday Night Funkin\': Mario\'s Madness | WELCOME TO WARP ZONE! (Warp State Legacy)';
 
 		bg = new FlxSprite(800, 250).loadGraphic(Paths.image('warpworld/warpmap'));
 		bg.setGraphicSize(Std.int(bg.width * 5));
@@ -78,11 +96,18 @@ class WarpState extends MusicBeatState
 		cartel.antialiasing = false;
 		add(cartel);
 
-		descText = new FlxText(50, 620, 1180, "", 32);
+		descText = new FlxText(50, 590, 1180, "", 32);
 		descText.setFormat(Paths.font("mario2.ttf"), 32, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		descText.scrollFactor.set();
 		descText.borderSize = 4.4;
 		add(descText);
+
+		warpPipe = new FlxSprite(1076, 311).loadGraphic('mods/images/warpworld/warpPipe.png');
+		warpPipe.setGraphicSize(Std.int(warpPipe.width * 5));
+		warpPipe.antialiasing = false;
+		warpPipe.updateHitbox();
+		warpPipe.alpha = !ClientPrefs.unlockedSecretSong ? 0 : 1;
+		add(warpPipe);
 
 		pibemapa = new FlxSprite(347, 316);
 		pibemapa.frames = Paths.getSparrowAtlas('warpworld/mariomap');
@@ -93,11 +118,19 @@ class WarpState extends MusicBeatState
 		pibemapa.updateHitbox();
 		add(pibemapa);
 
+		msg = new FlxText(0, 0, 1180, "WARNING:\nThis is still an early rewrite of the legacy Warp Zone.\nExpect these songs to change!", 16);
+		msg.setFormat(Paths.font("mario2.ttf"), 16, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		msg.scrollFactor.set();
+		msg.borderSize = 2.2;
+		add(msg);
+
 		changeSelection();
+		caminar(); // double make sure bro goes to the right area lmao
 		super.create();
 	}
 
 	var quieto:Bool = false;
+	var isDebugMode:Bool = false;
 
 	override function update(elapsed:Float)
 	{
@@ -108,8 +141,9 @@ class WarpState extends MusicBeatState
 
 		var upP = controls.UI_LEFT_P;
 		var downP = controls.UI_RIGHT_P;
+		var debugKey = FlxG.keys.justPressed.F10;
 
-		if (!quieto)
+		if (!quieto && !isDebugMode)
 		{
 			if (upP)
 			{
@@ -125,8 +159,9 @@ class WarpState extends MusicBeatState
 			}
 			if (controls.ACCEPT)
 			{
+				if (ClientPrefs.firstSecretView && curSelected == 7) ClientPrefs.firstSecretView = false;
 				quieto = true;
-				PlayState.isWarp = true;
+				PlayState.isLegacyWarp = true;
 				FlxG.sound.play(Paths.sound('gotolevel'));
 				PlayState.SONG = Song.loadFromJson(canciones[curSelected][1], canciones[curSelected][1]);
 				PlayState.campaignScore = 0;
@@ -135,13 +170,37 @@ class WarpState extends MusicBeatState
 				{
 					LoadingState.loadAndSwitchState(new PlayState());
 					FlxG.sound.music.volume = 0;
-					FreeplayState.destroyFreeplayVocals();
+					//FreeplayState.destroyFreeplayVocals();
 				});
+			}
+			if (debugKey) {
+				isDebugMode = !isDebugMode;
+				trace('ACTIVATED DEBUG MODE!!!');
+				FlxG.sound.playMusic(Paths.music('test'), 0.7);
+			}
+		}
+		else if (isDebugMode)
+		{
+			if (upP)
+			{
+				warpPipe.y -= 1;
+				trace('New Y: ' + warpPipe.y);
+			}
+			if (downP)
+			{
+				warpPipe.y += 1;
+				trace('New Y: ' + warpPipe.y);
+			}
+			if (debugKey) {
+				isDebugMode = !isDebugMode;
+				trace('DEACTIVATED DEBUG MODE!!!');
+				FlxG.sound.playMusic(Paths.music('warp theme'), 0.7);
 			}
 		}
 
 		if (controls.BACK)
 		{
+			if (ClientPrefs.firstSecretView) ClientPrefs.firstSecretView = false;
 			if (colorTween != null)
 			{
 				colorTween.cancel();
@@ -149,6 +208,7 @@ class WarpState extends MusicBeatState
 			PlayState.isWarp = false;
 			FlxG.sound.music.stop();
 			FlxG.sound.play(Paths.sound('cancelMenu'));
+			MainMenuState.canselectshit = true;// Menu Breaks if i dont set this??????
 			MusicBeatState.switchState(new MainMenuState());
 		}
 		super.update(elapsed);
@@ -233,6 +293,20 @@ class WarpState extends MusicBeatState
 				});
 			case 5:
 				tween = FlxTween.tween(pibemapa, {x: 1147}, 0.2, {
+					onComplete: function(twn:FlxTween)
+					{
+						quieto = false;
+					}
+				});
+			case 6:
+				tween = FlxTween.tween(pibemapa, {x: 1307}, 0.2, {
+					onComplete: function(twn:FlxTween)
+					{
+						quieto = false;
+					}
+				});
+			case 7:
+				tween = FlxTween.tween(pibemapa, {x: 1467}, 0.2, {
 					onComplete: function(twn:FlxTween)
 					{
 						quieto = false;

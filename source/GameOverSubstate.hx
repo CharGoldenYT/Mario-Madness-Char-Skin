@@ -629,6 +629,10 @@ class GameOverSubstate extends MusicBeatSubstate
 			else if (PlayState.isWarp)
 			{
 				MusicBeatState.switchState(new WarpState());
+			} 
+			else if (PlayState.isLegacyWarp)
+			{
+				PlayState.doLegacyWarpCheck();
 			}
 			else
 			{

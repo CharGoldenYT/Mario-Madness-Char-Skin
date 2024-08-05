@@ -106,6 +106,7 @@ class MainMenuState extends MusicBeatState {
 	public var cornerOffset:NumTween;
 
 	public var stars:FlxTypedSpriteGroup<FlxSprite>;
+	var warpWhistleSound:FlxSound = null;
 
 	// ! FOR STAR DATAS, PUT THE SAVE IN CLIENTPREFS.HX IN THE ORDER YOU WANT THE STARS TO APPEAR -lunar
 	var starData:Array<Bool> = [ClientPrefs.storySave[0], ClientPrefs.storySave[6], ClientPrefs.storySave[7], ClientPrefs.storySave[8]];
@@ -448,13 +449,38 @@ class MainMenuState extends MusicBeatState {
 		}
 		bgAm = amount;
 
+		
+		if (FileSystem.exists('./assets/sounds/warpWhistle.ogg')) {
+				warpWhistleSound = new FlxSound().loadEmbedded(Paths.sound('warpWhistle'));
+			} else if (FileSystem.exists('./mods/sounds/warpWhistle.ogg')) {
+				warpWhistleSound = new FlxSound().loadEmbedded('mods/sounds/warpWhistle.ogg');
+			}
+
 		super.create();
 		FlxG.mouse.visible = true;
 	}
 
 	var tieneflauta:Bool = false;
 	var fullTimer:Float = 0;
+	var thetimer:FlxTimer;
 	override function update(elapsed:Float) {
+		/*if (FlxG.keys.justPressed.THREE)
+		{
+			trace('Bro Pressed Three!');
+			thetimer = new FlxTimer().start(3, function(tmr:FlxTimer){
+				if (FlxG.keys.pressed.THREE)
+				{
+					trace('SEND HIM TO THE VOID.');
+					MusicBeatState.switchState(new WarpStateLegacy());
+				}
+			});
+		if (FlxG.keys.justReleased.THREE)
+		{
+			trace('Bro no longer holding Three!');
+			thetimer.cancel();
+		}
+	}*/
+
 		fullTimer += elapsed;
 
 		if (FlxG.sound.music.volume < 0.8 && !selectedSomethin)
@@ -560,6 +586,22 @@ class MainMenuState extends MusicBeatState {
 
 						FlxG.sound.music.pause();
 						openSubState(new VideoSubState('scrubb'));
+					case 'warp':
+						typin = '';
+						canselectshit = false;
+
+						FlxG.sound.music.pause();
+						trace('SEND HIM TO THE VOID.');
+						if (warpWhistleSound != null) {
+							warpWhistleSound.play();
+							thetimer = new FlxTimer().start(2.69/*Nice.*/, function(tmr:FlxTimer){
+								MusicBeatState.switchState(new WarpStateLegacy());
+							});
+							} else if (warpWhistleSound == null) {
+								thetimer = new FlxTimer().start(1, function(tmr:FlxTimer){
+									MusicBeatState.switchState(new WarpStateLegacy());
+								});
+							}
 				}
 			}
 

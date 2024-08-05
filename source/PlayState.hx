@@ -157,6 +157,7 @@ class PlayState extends MusicBeatState
 	public static var SONG:SwagSong = null;
 	public static var isStoryMode:Bool = false;
 	public static var isWarp:Bool = false;
+	public static var isLegacyWarp:Bool = false;
 	public static var storyWeek:Int = 0;
 	public static var storyPlaylist:Array<String> = ['Its a me', 'Starman Slaughter'];
 	public static var storyDifficulty:Int = 1;
@@ -6221,10 +6222,16 @@ class PlayState extends MusicBeatState
 				{
 					CustomFadeTransition.nextCamera = null;
 				}
-				if(isWarp)
+				if(isWarp) {
 					MusicBeatState.switchState(new WarpState());
-				else
+				}
+				else if (PlayState.isLegacyWarp)
+					{
+						doLegacyWarpCheck();
+					}
+				else {
 					MusicBeatState.switchState(new MainMenuState());
+				}
 			}
 			else
 			{
@@ -7474,6 +7481,10 @@ class PlayState extends MusicBeatState
 						if (PlayState.isWarp)
 						{
 							MusicBeatState.switchState(new WarpState());
+						}
+						else if (PlayState.isLegacyWarp)
+						{
+							doLegacyWarpCheck();
 						}
 						else
 						{
@@ -14670,6 +14681,10 @@ class PlayState extends MusicBeatState
 				changedDifficulty = false;
 				cpuControlled = false;
 			}
+			else if (PlayState.isLegacyWarp)
+			{
+				doLegacyWarpCheck();
+			}
 			else
 			{
 				FlxG.sound.music.stop();
@@ -15331,6 +15346,9 @@ class PlayState extends MusicBeatState
 
 	function noteMissPress(direction:Int = 1, ?ghostMiss:Bool = false):Void // You pressed a key when there was no notes to press for this key
 	{
+		if (ClientPrefs.ghostTapping)
+			return // PISS OFF, I WANNA GHOST TAP WITHOUT IT CAUSING A STUPID ASS MISS EVERY TIME THERES A NOTE ALSO THERE (maybe a later psych fixed this, but this uses 0.4.2 :shrug:).
+
 		if (!boyfriend.stunned)
 		{
 			if(!nodamage){
@@ -15832,6 +15850,26 @@ class PlayState extends MusicBeatState
 		if (luaArray != null && !preventLuaRemove)
 		{
 			luaArray.remove(lua);
+		}
+	}
+
+
+	/**
+	 * Half because of the fact it'd be easier to implement 1 singular function, Half because of PauseSubState
+	 */
+	static var INT_TO_USE:Int = 0;
+	static var songToCheck:String;
+	public static function doLegacyWarpCheck()
+	{
+		for (array in WarpStateLegacy.canciones) { //BAM MAKE IT SO I DONT HAVE TO RETYPE THIS FUNCTION EVERYTIME.
+				INT_TO_USE++; 
+				songToCheck = array[1];
+				if (Paths.formatToSongPath(SONG.song.toLowerCase()).trim() == songToCheck)
+				{
+					INT_TO_USE--; // because it will be offset by 1.
+					WarpStateLegacy.curSelected = INT_TO_USE;
+					MusicBeatState.switchState(new WarpStateLegacy());
+			}
 		}
 	}
 
