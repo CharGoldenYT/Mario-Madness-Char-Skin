@@ -1,5 +1,6 @@
 package;
 
+import flixel.sound.FlxSound;
 #if desktop
 import Discord.DiscordClient;
 #end
@@ -14,6 +15,7 @@ import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
 import flixel.util.FlxTimer;
 import lime.utils.Assets;
+import lime.app.Application;
 
 using StringTools;
 
@@ -22,11 +24,12 @@ class WarpStateLegacy extends MusicBeatState //I WANNA SEE LEMME SEE
 	var tween:FlxTween;
 	var tween2:FlxTween;
 	public static var curSelected:Int = 0;
+	public static var selectedModifier:Int = 0;
 
 	private var grpOptions:FlxTypedGroup<Alphabet>;
 	private var iconArray:Array<AttachedSprite> = [];
 
-	public static var canciones:Array<Dynamic> = References.getLegacyWarpSongs(false);
+	public static var canciones:Array<Dynamic> = [];
 
 	var bg:FlxSprite;
 	var pibemapa:FlxSprite;
@@ -36,34 +39,20 @@ class WarpStateLegacy extends MusicBeatState //I WANNA SEE LEMME SEE
 	var intendedColor:Int;
 	var colorTween:FlxTween;
 	var msg:FlxText;
+	var instPlaying:Bool = false;
+	var unlockedSecret:Bool = false;
+	public static var instance:WarpStateLegacy;
 	override function create()
 	{
+		instance = this;
 		#if desktop
 		// Updating Discord Rich Presence
 		DiscordClient.changePresence("In the Warp Zone", null);
 		#end
 		FlxG.sound.playMusic(Paths.music('warp theme'), 0.7);
 
-		if (ClientPrefs.storySave == [true, true, true, true, true, true, true, true, true, false] || ClientPrefs.storySave == [true, true, true, true, true, true, true, true, true, true])
-		{
-			if (ClientPrefs.firstSecretView == true) {
-				if (!ClientPrefs.unlockedSecretSong){
-					ClientPrefs.unlockedSecretSong = true;
-					trace('Unlocking Secret Song!');
-					ClientPrefs.saveSettings();
-					canciones = References.getLegacyWarpSongs(true);
-					curSelected = 7;
-				}
-			}
-		} else {
-			if (ClientPrefs.unlockedSecretSong == true || ClientPrefs.firstSecretView == false) {
-				trace('Not Enough Story Progress To Unlock Secret Song!');
-				ClientPrefs.firstSecretView = true; // just in case testing f'd it up.
-				ClientPrefs.unlockedSecretSong = false; // just in case testing f'd it up.
-				ClientPrefs.saveSettings();
-				canciones = References.getLegacyWarpSongs(false);
-			}
-		}
+		References.checkSecretSaveFlags();
+		doSaveCheck();
 
 		openfl.Lib.application.window.title = 'Friday Night Funkin\': Mario\'s Madness | WELCOME TO WARP ZONE! (Warp State Legacy)';
 
@@ -106,7 +95,7 @@ class WarpStateLegacy extends MusicBeatState //I WANNA SEE LEMME SEE
 		warpPipe.setGraphicSize(Std.int(warpPipe.width * 5));
 		warpPipe.antialiasing = false;
 		warpPipe.updateHitbox();
-		warpPipe.alpha = !ClientPrefs.unlockedSecretSong ? 0 : 1;
+		warpPipe.alpha = !ClientPrefs.secretSave[5] ? 0 : 1;
 		add(warpPipe);
 
 		pibemapa = new FlxSprite(347, 316);
@@ -125,13 +114,97 @@ class WarpStateLegacy extends MusicBeatState //I WANNA SEE LEMME SEE
 		add(msg);
 
 		changeSelection();
+		if (curSelected != selectedModifier) curSelected = selectedModifier;
+		if (curSelected >= canciones.length)
+			curSelected = canciones.length - 1;
 		caminar(); // double make sure bro goes to the right area lmao
 		super.create();
 	}
 
+	public function new (?curSelectedModifier:Int = 0) {
+		super();
+		curSelected = curSelectedModifier;
+		selectedModifier = curSelectedModifier;
+	}
+
+	var doReset:Bool = false;
+	var weirdSave:Bool = false;
+	/**
+	 * Basically this does several checks
+	 * It checks if the first save in secretSave is false, and if so will make it true because you literally cant access any songs without it, and reset state |                                             
+	 * then if any song has the seen flag set, but the next song's flag isnt set, set it and reset state. |                                         
+	 * if ANY song's flag is set that shouldn't be, set it to default and reset
+	 */
+	function doSaveCheck() {
+		var secretSeen = ClientPrefs.secretSeen;
+		var secretSave = ClientPrefs.secretSave;
+		trace('Cur Save: "$secretSave" | Cur Seen: "$secretSeen"');
+		for (i in 0...5) {
+			var truePos:Int = i + 1;
+			trace('TruePos: $truePos');
+			if (secretSeen[i] == false && secretSave[truePos] == true) {
+				trace('secretSeen[$i] is false, but secretSave[$truePos] is true???');
+				 //ClientPrefs.secretSave[truePos] = false;
+				 //weirdSave = true;
+				 }
+			if (secretSeen[i] == false && secretSeen[truePos] == true) {
+				trace('secretSeen[$i] is false, but secretSeen[$truePos] is true???'); 
+				//ClientPrefs.secretSeen[truePos] = false;
+				//weirdSave = true;
+				}
+		}
+		if (weirdSave) doReset = true;
+		if (ClientPrefs.secretSave[0] == false) {
+			ClientPrefs.secretSave[0] = true; 
+			ClientPrefs.saveSettings();
+			doReset = true;
+			}
+
+		if (ClientPrefs.secretSeen[0] == true) {
+			if (ClientPrefs.secretSave[1] == false) {
+				ClientPrefs.secretSave[1] = true; 
+				ClientPrefs.saveSettings();
+				doReset = true;
+				}
+
+			if (ClientPrefs.secretSeen[1] == true) {
+				if (ClientPrefs.secretSave[2] == false) {
+					ClientPrefs.secretSave[2] = true; 
+					ClientPrefs.saveSettings();
+					doReset = true;
+					}
+				
+				if (ClientPrefs.secretSeen[2] == true){
+					if (ClientPrefs.secretSave[3] == false) {
+						ClientPrefs.secretSave[3] = true; 
+						ClientPrefs.saveSettings();
+						doReset = true;
+						}
+
+					if (ClientPrefs.secretSeen[3] == true){
+						if (ClientPrefs.secretSave[4] == false) {
+							ClientPrefs.secretSave[4] = true; 
+							ClientPrefs.saveSettings();
+							doReset = true;
+							}
+
+						if (ClientPrefs.secretSeen[4] == true) {
+							if (ClientPrefs.secretSave[5] == false){
+									ClientPrefs.secretSave[5] = true;
+									ClientPrefs.saveSettings();
+									doReset = true;
+							}
+						} 
+					}
+				}
+			} 
+		}
+		canciones = References.getLegacyWarpSongs();
+	}
+
 	var quieto:Bool = false;
 	var isDebugMode:Bool = false;
-
+	var initialized:Bool = false;
 	override function update(elapsed:Float)
 	{
 		if (FlxG.sound.music.volume < 0.7)
@@ -142,6 +215,8 @@ class WarpStateLegacy extends MusicBeatState //I WANNA SEE LEMME SEE
 		var upP = controls.UI_LEFT_P;
 		var downP = controls.UI_RIGHT_P;
 		var debugKey = FlxG.keys.justPressed.F10;
+
+		if (doReset && initialized) FlxG.resetState();
 
 		if (!quieto && !isDebugMode)
 		{
@@ -157,9 +232,16 @@ class WarpStateLegacy extends MusicBeatState //I WANNA SEE LEMME SEE
 				caminar();
 				quieto = true;
 			}
-			if (controls.ACCEPT)
+			if (controls.ACCEPT && !FlxG.keys.justPressed.SPACE)
 			{
-				if (ClientPrefs.firstSecretView && curSelected == 7) ClientPrefs.firstSecretView = false;
+				if (ClientPrefs.secretSave[curSelected] == false) {
+					FlxG.sound.play(Paths.sound('wrong'));
+					return;
+				} else {
+				if (instPlaying){
+					FlxG.sound.playMusic(Paths.music('warp theme'), 0.7);
+					instPlaying = false;
+				}
 				quieto = true;
 				PlayState.isLegacyWarp = true;
 				FlxG.sound.play(Paths.sound('gotolevel'));
@@ -172,6 +254,17 @@ class WarpStateLegacy extends MusicBeatState //I WANNA SEE LEMME SEE
 					FlxG.sound.music.volume = 0;
 					//FreeplayState.destroyFreeplayVocals();
 				});
+				}
+			}
+			if (FlxG.keys.justPressed.SPACE)
+			{
+				if (canciones[curSelected][0] != 'World ?\n(???)') {
+					var song:String = canciones[curSelected][1];
+					FlxG.sound.playMusic(Paths.inst(song));
+					instPlaying = true;
+				} else {
+					FlxG.sound.play(Paths.sound('wrong'));
+				}
 			}
 			if (debugKey) {
 				isDebugMode = !isDebugMode;
@@ -196,11 +289,35 @@ class WarpStateLegacy extends MusicBeatState //I WANNA SEE LEMME SEE
 				trace('DEACTIVATED DEBUG MODE!!!');
 				FlxG.sound.playMusic(Paths.music('warp theme'), 0.7);
 			}
+			if (FlxG.keys.justPressed.F9)
+			{
+				trace('RESETTING SECRET SAVE');
+				for (i in 0...ClientPrefs.secretSeen.length){
+					ClientPrefs.secretSeen[i] = false;
+				}
+				for (i in 0...ClientPrefs.secretSave.length){
+					ClientPrefs.secretSave[i] = false;
+				}
+				ClientPrefs.saveSettings();
+				FlxG.resetState();
+			}
+			if (FlxG.keys.justPressed.F2)
+			{
+				trace('SETTING SECRET SAVE/SEEN TO ALL TRUE');
+				for (i in 0...ClientPrefs.secretSave.length){
+					ClientPrefs.secretSave[i] = true;
+				}
+				for (i in 0...ClientPrefs.secretSeen.length){
+					ClientPrefs.secretSeen[i] = true;
+				}
+				Application.current.window.alert("Set Secret Save to 100%!", 'CHEATER!');
+				ClientPrefs.saveSettings();
+				FlxG.resetState();
+			}
 		}
 
 		if (controls.BACK)
 		{
-			if (ClientPrefs.firstSecretView) ClientPrefs.firstSecretView = false;
 			if (colorTween != null)
 			{
 				colorTween.cancel();
@@ -210,6 +327,10 @@ class WarpStateLegacy extends MusicBeatState //I WANNA SEE LEMME SEE
 			FlxG.sound.play(Paths.sound('cancelMenu'));
 			MainMenuState.canselectshit = true;// Menu Breaks if i dont set this??????
 			MusicBeatState.switchState(new MainMenuState());
+		}
+		if (FlxG.keys.justPressed.RBRACKET) {
+			trace('Secret Save: ' + ClientPrefs.secretSave);
+			trace('Secret Seen: ' + ClientPrefs.secretSeen);
 		}
 		super.update(elapsed);
 	}
@@ -245,6 +366,7 @@ class WarpStateLegacy extends MusicBeatState //I WANNA SEE LEMME SEE
 			}
 		}
 		descText.text = canciones[curSelected][0];
+		//trace(curSelected);
 	}
 
 	private function unselectableCheck(num:Int):Bool
@@ -315,5 +437,6 @@ class WarpStateLegacy extends MusicBeatState //I WANNA SEE LEMME SEE
 		}
 		do {}
 		while (unselectableCheck(curSelected));
+		initialized = true;
 	}
 }

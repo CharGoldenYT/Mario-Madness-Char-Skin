@@ -813,6 +813,9 @@ class PlayState extends MusicBeatState
 	override public function create()
 	{
 		instance = this;
+		#if officialBuild
+		trace('Hi :3');
+		#end
 
 		if (FlxG.sound.music != null)
 			FlxG.sound.music.stop();
@@ -14683,7 +14686,7 @@ class PlayState extends MusicBeatState
 			}
 			else if (PlayState.isLegacyWarp)
 			{
-				doLegacyWarpCheck();
+				doLegacyWarpCheck(true);
 			}
 			else
 			{
@@ -15780,7 +15783,7 @@ class PlayState extends MusicBeatState
 
 	public static function onWinClose()
 	{
-		trace('BUT UN C PAPU MISTERIOSO CIERRA EL JUEGO');
+		//trace('BUT UN C PAPU MISTERIOSO CIERRA EL JUEGO');
 
 		if (ClientPrefs.noVirtual && curStage == 'virtual')
 		{
@@ -15859,16 +15862,21 @@ class PlayState extends MusicBeatState
 	 */
 	static var INT_TO_USE:Int = 0;
 	static var songToCheck:String;
-	public static function doLegacyWarpCheck()
+	public static function doLegacyWarpCheck(?DoSeenCheck:Bool = false)
 	{
+		INT_TO_USE = 0; // doubly make sure this shit is 0
 		for (array in WarpStateLegacy.canciones) { //BAM MAKE IT SO I DONT HAVE TO RETYPE THIS FUNCTION EVERYTIME.
 				INT_TO_USE++; 
 				songToCheck = array[1];
 				if (Paths.formatToSongPath(SONG.song.toLowerCase()).trim() == songToCheck)
 				{
 					INT_TO_USE--; // because it will be offset by 1.
-					WarpStateLegacy.curSelected = INT_TO_USE;
-					MusicBeatState.switchState(new WarpStateLegacy());
+					if (DoSeenCheck) {
+						ClientPrefs.secretSeen[INT_TO_USE] = true; 
+						ClientPrefs.saveSettings();
+						References.checkSecretSaveFlags(true, INT_TO_USE);
+						}
+					MusicBeatState.switchState(new WarpStateLegacy(INT_TO_USE));
 			}
 		}
 	}

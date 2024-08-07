@@ -46,7 +46,7 @@ class PatchNotes extends MusicBeatState
 	private var verBoxes:FlxTypedGroup<FlxSprite>;
 	private var verSprites:FlxTypedGroup<FlxSprite>;
 
-	var versions:Array<Dynamic> = [['2.0.1', '01/23/2024']/*, ['3.0.0', '01/08/2035']*/];
+	var versions:Array<Dynamic> = [['2.0.1', '01/23/2024'], ['Char Skin v0.1', '8/18/2900']/*, ['3.0.0', '01/08/2035']*/];
 
 	override function create()
 	{

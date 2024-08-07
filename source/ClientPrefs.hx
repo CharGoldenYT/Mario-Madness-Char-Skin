@@ -50,9 +50,10 @@ class ClientPrefs {
 
 	public static var worlds:Array<Int> = [0, 0, 0, 0, 0];
 	public static var worldsALT:Array<Int> = [0, 0, 0, 0, 0];
-
-	public static var unlockedSecretSong:Bool = false;
-	public static var firstSecretView:Bool = true;
+	 										//World 2[0] | World 3[1] | World 4[2] | World 5[3] | World 6[4] | World ?/Secret [5]
+	public static var secretSave:Array<Bool> = [false, false, false, false, false, false];
+											//World 2[0] | World 3[1] | World 4[2] | World 5[3] | World 6[4] | World ?/Secret [5]
+	public static var secretSeen:Array<Bool> = [false, false, false, false, false, false];
 
 	public static var defaultKeys:Array<FlxKey> = [
 		        A,   LEFT, // Note Left
@@ -139,8 +140,8 @@ class ClientPrefs {
 		FlxG.save.data.worlds = worlds;
 		FlxG.save.data.worldsALT = worldsALT;
 		FlxG.save.data.vramSprites = vramSprites;
-		FlxG.save.data.unlockedSecretSong = unlockedSecretSong;
-		FlxG.save.data.firstSecretView = firstSecretView;
+		FlxG.save.data.secretSave = secretSave;
+		FlxG.save.data.secretSeen = secretSeen;
 
 		FlxG.save.flush();
 
@@ -256,11 +257,11 @@ class ClientPrefs {
 		if (FlxG.save.data.noDiscord != null) {
 			noDiscord = FlxG.save.data.noDiscord;
 		}
-		if (FlxG.save.data.unlockedSecretSong != null) {
-			unlockedSecretSong = FlxG.save.data.unlockedSecretSong;
+		if (FlxG.save.data.secretSave != null) {
+			secretSave = FlxG.save.data.secretSave;
 		}
-		if (FlxG.save.data.firstSecretView != null) {
-			firstSecretView = FlxG.save.data.firstSecretView;
+		if (FlxG.save.data.secretSeen != null) {
+			secretSeen = FlxG.save.data.secretSeen;
 		}
 
 

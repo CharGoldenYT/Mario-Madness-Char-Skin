@@ -21,6 +21,7 @@ class DirectChat
 	public static var finalchat:String = '';
 	public static var cantidad:Int = 0;
 	public static var tooLong:Bool = false;
+	public static var forceMsg:Bool = false;
 
 	public function new()
 	{
@@ -301,6 +302,8 @@ class DirectChat
 				'haywireghost',
 				'Persona_Random',
 				'tia_Marie',
+				'Pehp',
+				'princereaper617',
 				//ones below here have special messages for their names
 				
 				'Joe_Biden',
@@ -336,7 +339,11 @@ class DirectChat
 				'Joker',
 				'Super Wario Man',
 				'WhiteyDvl',
-				'misterSYS'
+				'misterSYS',
+				'CharGoldenYT',
+				'CosmiChaos1129',
+				'callofodd',
+				'Eyy_Man'
 			];
 
 
@@ -360,6 +367,30 @@ class DirectChat
 			chosenUsername = usernames[FlxG.random.int(0, usernames.length - 1)];
 			
 			switch (chosenUsername){
+				case 'CharGoldenYT':
+					switch (FlxG.random.int(1,5)) {
+						case 1:
+							chosenMessage = 'I FOUND YOU FAKER';
+						case 2:
+							chosenMessage = 'Why do you look so small?';
+						case 3:
+							chosenMessage = 'I challenge you to a Rap Battle Bench!';
+						case 4:
+							chosenMessage = 'Among you is an impoter! :gasp:';
+						case 5:
+							chosenMessage = 'YARGH ME TIMBERS BE SHIVERIN\'';
+					}
+
+				case 'CosmiChaos1129':
+					chosenMessage = 'My cat is a gremlin lmao.';
+
+				case 'callofodd':
+					chosenMessage = 'is that the pratt of 87?!';
+
+				case 'Eyy_Man':
+					chosenMessage = ':steamhappyface:';
+					forceMsg = true;
+
 				case 'saster':
 					chosenMessage = "hi guys, i'm saster";
 
@@ -519,6 +550,20 @@ class DirectChat
 						chosenMessage = "this song is truly unbeatable";
 			}
 
+			if (forceMsg && chosenUsername != 'Eyy_Man') {
+				chosenMessage = "YOO It's Eyy_Man! +rep Eyy_Man";
+				switch (FlxG.random.int(1,4)) {
+					case 1:
+						chosenUsername = "CharGoldenYT";
+					case 2:
+						chosenUsername = "CosmiChaos1129";
+					case 3:
+						chosenUsername = "Pehp";
+					case 4:
+						chosenUsername = "princereaper617";
+				}
+				forceMsg = false;
+			}
 			chatText = tagcolor + chosenUsername + ': ' + tagcolor + chosenMessage;
 
 			if (chatText.length > 35){
