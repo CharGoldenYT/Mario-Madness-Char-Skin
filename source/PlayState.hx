@@ -9611,7 +9611,9 @@ class PlayState extends MusicBeatState
 							{
 								gfGroup.scrollFactor.set(0.55, 0.55);
 								triggerEventNote('Change Character', '2', 'yoshi-exe');
+								triggerEventNote('Change Character', '0', 'bfexenew');
 								triggerEventNote('Play Animation', 'prepow', 'gf');
+								PauseSubState.muymalo = 2;
 								gfGroup.x = 685;
 								gfGroup.y = -1200;
 								extraTween.push(FlxTween.tween(gfGroup, {y: 20}, 0.20, {startDelay: 1.04, onComplete: function(twn:FlxTween)
@@ -9721,7 +9723,9 @@ class PlayState extends MusicBeatState
 						// defaultCamZoom = 0.8;
 						dad.visible = true;
 						triggerEventNote('Change Character', '1', 'mariohorror-melt');
+						triggerEventNote('Change Character', '0', 'bfexenewnervous');
 						triggerEventNote('Play Animation', 'jump', 'dad');
+						PauseSubState.muymalo = 3;
 						dad.x -= 800;
 						dad.y += 1200;
 						defaultCamZoom = 0.5;

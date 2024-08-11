@@ -272,6 +272,29 @@ class ClientPrefs {
 		}
 	}
 
+	public static function setSecretSave(num:Int, bool:Bool) {
+		#if debug
+			if (num != 1 || num != 0) {
+				for (i in 0...num) {
+				if (secretSave[i] != bool) secretSave[i] = bool; trace('secretSave[$i] forced to $bool for save check');
+				if (secretSeen[i] != bool) secretSeen[i] = bool; trace('secretSeen[$i] forced to $bool for save check');
+			}
+			if (bool == false && num < 6) {
+				for (i in (num + 1)...6) {
+					if (secretSave[i] == true) secretSave[i] = bool; trace('secretSave[$i] forced to $bool for save check');
+					if (secretSeen[i] == true) secretSeen[i] = bool; trace('secretSeen[$i] forced to $bool for save check');
+				}
+			}
+		}
+			secretSave[num] = bool;
+			secretSeen[num] = bool;
+			saveSettings();
+			trace('Saved secretSave[$num] as $bool');
+		#else
+		trace('NICE TRY FUNNY GUY.');
+		#end
+	}
+
 	public static function reloadControls(newKeys:Array<FlxKey>) {
 		ClientPrefs.removeControls(ClientPrefs.lastControls);
 		ClientPrefs.lastControls = newKeys.copy();

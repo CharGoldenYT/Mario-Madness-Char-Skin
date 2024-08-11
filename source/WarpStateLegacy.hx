@@ -16,6 +16,7 @@ import flixel.util.FlxColor;
 import flixel.util.FlxTimer;
 import lime.utils.Assets;
 import lime.app.Application;
+import flixel.input.keyboard.FlxKey;
 
 using StringTools;
 
@@ -45,14 +46,14 @@ class WarpStateLegacy extends MusicBeatState //I WANNA SEE LEMME SEE
 	override function create()
 	{
 		instance = this;
-		#if desktop
-		// Updating Discord Rich Presence
-		DiscordClient.changePresence("In the Warp Zone", null);
-		#end
-		FlxG.sound.playMusic(Paths.music('warp theme'), 0.7);
-
 		References.checkSecretSaveFlags();
 		doSaveCheck();
+
+		#if desktop
+		// Updating Discord Rich Presence
+		DiscordClient.changePresence("In the (legacy) Warp Zone - Char Skin for Mario's Madness", null);
+		#end
+		FlxG.sound.playMusic(Paths.music('warpzone/0'), 0.7);
 
 		openfl.Lib.application.window.title = 'Friday Night Funkin\': Mario\'s Madness | WELCOME TO WARP ZONE! (Warp State Legacy)';
 
@@ -144,13 +145,13 @@ class WarpStateLegacy extends MusicBeatState //I WANNA SEE LEMME SEE
 			trace('TruePos: $truePos');
 			if (secretSeen[i] == false && secretSave[truePos] == true) {
 				trace('secretSeen[$i] is false, but secretSave[$truePos] is true???');
-				 //ClientPrefs.secretSave[truePos] = false;
-				 //weirdSave = true;
+				 ClientPrefs.secretSave[truePos] = false;
+				 weirdSave = true;
 				 }
 			if (secretSeen[i] == false && secretSeen[truePos] == true) {
 				trace('secretSeen[$i] is false, but secretSeen[$truePos] is true???'); 
-				//ClientPrefs.secretSeen[truePos] = false;
-				//weirdSave = true;
+				ClientPrefs.secretSeen[truePos] = false;
+				weirdSave = true;
 				}
 		}
 		if (weirdSave) doReset = true;
@@ -239,7 +240,7 @@ class WarpStateLegacy extends MusicBeatState //I WANNA SEE LEMME SEE
 					return;
 				} else {
 				if (instPlaying){
-					FlxG.sound.playMusic(Paths.music('warp theme'), 0.7);
+					FlxG.sound.playMusic(Paths.music('warpzone/0'), 0.7);
 					instPlaying = false;
 				}
 				quieto = true;
@@ -287,7 +288,7 @@ class WarpStateLegacy extends MusicBeatState //I WANNA SEE LEMME SEE
 			if (debugKey) {
 				isDebugMode = !isDebugMode;
 				trace('DEACTIVATED DEBUG MODE!!!');
-				FlxG.sound.playMusic(Paths.music('warp theme'), 0.7);
+				FlxG.sound.playMusic(Paths.music('warpzone/0'), 0.7);
 			}
 			if (FlxG.keys.justPressed.F9)
 			{
@@ -314,6 +315,14 @@ class WarpStateLegacy extends MusicBeatState //I WANNA SEE LEMME SEE
 				ClientPrefs.saveSettings();
 				FlxG.resetState();
 			}
+
+			var justPressedArray:Array<Bool> = [FlxG.keys.justPressed.ONE, FlxG.keys.justPressed.TWO, FlxG.keys.justPressed.THREE, FlxG.keys.justPressed.FOUR, FlxG.keys.justPressed.FIVE, FlxG.keys.justPressed.SIX];
+			for (i in 0...justPressedArray.length) {
+				if (justPressedArray[i] == true) {
+					ClientPrefs.setSecretSave(i, !ClientPrefs.secretSave[i]);
+					FlxG.resetState();
+				}
+			}
 		}
 
 		if (controls.BACK)
@@ -337,11 +346,12 @@ class WarpStateLegacy extends MusicBeatState //I WANNA SEE LEMME SEE
 
 	function changeSelection(change:Int = 0)
 	{
-		FlxG.sound.play(Paths.sound('bros3pass'), 1); // LO QUE HACE EL JUEGO ES MANDARTE AL I HATE YOU SI LO PONES EN 0, TEN EN CUENTA ESTO
-
 		do
 		{
 			curSelected += change;
+		if (initialized && 
+			curSelected != -1 && 
+			curSelected != (canciones.length)) FlxG.sound.play(Paths.sound('bros3pass'), 1); // LO QUE HACE EL JUEGO ES MANDARTE AL I HATE YOU SI LO PONES EN 0, TEN EN CUENTA ESTO
 			if (curSelected < 0)
 				curSelected = 0;
 			if (curSelected >= canciones.length)
