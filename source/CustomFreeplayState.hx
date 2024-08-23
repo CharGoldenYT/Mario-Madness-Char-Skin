@@ -292,8 +292,8 @@ class CustomFreeplayState extends MusicBeatSubstate
 					['No Party' + notAllowed,		'no-party',         '30'],
 					['Paranoia' + mixed, 'paranoia', '41'],
 					['Overdue' + warnMessage,		'overdue',         '35'],
-					['Powerdown' + warnMessage, 'powerdown', '27'],
-					['Demise' + warnMessage, 'demise', '23']
+					['Powerdown' + mixed, 'powerdown', '27'],
+					['Demise' + mixed, 'demise', '23']
 				];
 
 			case 'Classified':
