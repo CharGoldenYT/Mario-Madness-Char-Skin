@@ -8365,12 +8365,17 @@ class PlayState extends MusicBeatState
 							if (formattedSong == 'last-course') additiveOffset = [25, -10];
 							if (formattedSong == 'golden-land') additiveOffset = [175, 0];
 								playerStrums.members[i].x = boyfriend.x - (700 + additiveOffset[0]);
-								if (formattedSong == 'oh-god-no') 
+								if (formattedSong == 'oh-god-no') {
 									if (!ClientPrefs.downScroll)
-										playerStrums.members[i].y = boyfriend.y; 
-								else 
-									if (! ClientPrefs.downScroll || ClientPrefs.downScroll && formattedSong != 'overdue')
+										playerStrums.members[i].y = boyfriend.y;
+								} else {
+									if (ClientPrefs.downScroll) {
+										if (formattedSong != 'overdue') // dumb shit i gotta do to make this shit work >:(
+											playerStrums.members[i].y = boyfriend.y - (150 + additiveOffset[1]);
+									} else {
 										playerStrums.members[i].y = boyfriend.y - (150 + additiveOffset[1]);
+										}
+								}
 
 								playerStrums.members[i].postCharStick();
 
