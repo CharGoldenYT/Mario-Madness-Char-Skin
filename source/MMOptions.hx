@@ -34,7 +34,7 @@ import Discord.DiscordClient;
 // Yeah seems like a reasonable goal to me
 class MMOptions extends MusicBeatSubstate
 {
-	var options:Array<String> = ['Notes', 'Controls', 'Preferences', 'Mario Options', 'Delete Data'];
+	var options:Array<String> = ['Notes', 'Controls', 'Preferences', 'Mario Options', 'Fun', 'Delete Data'];
 	private var grpOptions:FlxTypedGroup<FlxText>;
 
 	private static var curSelected:Int = 0;
@@ -146,6 +146,8 @@ class MMOptions extends MusicBeatSubstate
 					openSubState(new MarioSubstate());
 				case 'Delete Data':
 					openSubState(new DeleteSubstate());
+				case 'Fun':
+					openSubState(new FunOptionSubstate());
 			}
 		}
 	}
@@ -1269,6 +1271,277 @@ class PreferencesSubstate extends MusicBeatSubstate
 				text.sprTracker = null;
 				text.changeText(daText);
 				text.sprTracker = lastTracker;
+			}
+		}
+	}
+
+	private function unselectableCheck(num:Int):Bool
+	{
+		for (i in 0...unselectableOptions.length)
+		{
+			if (options[num] == unselectableOptions[i])
+			{
+				return true;
+			}
+		}
+		return options[num] == '';
+	}
+}
+class FunOptionSubstate extends MusicBeatSubstate
+{
+	private static var curSelected:Int = 0;
+	static var unselectableOptions:Array<String> = ['GRAPHICS'];
+	static var noCheckbox:Array<String> = ['Menu BG'];
+
+	static var options:Array<String> = [
+		'Enable Sticky Strums',
+	];
+
+	static var bglist:Array<String> = [
+		'Mushroom Kingdom',
+	];
+
+	final unlockBG:Array<Bool> = [ClientPrefs.storySave[1], true, ClientPrefs.storySave[1], ClientPrefs.storySave[1], ClientPrefs.storySave[2], ClientPrefs.storySave[2], ClientPrefs.storySave[4], ClientPrefs.storySave[8]];
+
+	private var grpOptions:FlxTypedGroup<Alphabet>;
+	private var checkboxArray:Array<CheckboxThingie> = [];
+	private var checkboxNumber:Array<Int> = [];
+	private var grpTexts:FlxTypedGroup<AttachedText>;
+	private var textNumber:Array<Int> = [];
+
+	private var descText:FlxText;
+
+	public function new()
+	{
+		super();
+		// avoids lagspikes while scrolling through menus!
+
+			//if()
+			bglist = ['Random', 'Mushroom Kingdom'];
+			var curList:Array<String> = [
+				'Bedrock City',
+				'Green Hill Zone',
+				'Bowser Castle',
+				'Hackrom Forest',
+				'Gameboy Land',
+				'Hunting Area'
+			];
+			for (i in 0... curList.length){
+			if(unlockBG[(i + 2)]){
+				bglist.push(curList[i]);
+			}
+			}
+
+		grpOptions = new FlxTypedGroup<Alphabet>();
+		add(grpOptions);
+
+		grpTexts = new FlxTypedGroup<AttachedText>();
+		add(grpTexts);
+		
+
+		for (i in 0...options.length)
+		{
+			var isCentered:Bool = unselectableCheck(i);
+			var optionText:Alphabet = new Alphabet(0, 70 * i, options[i], false, false);
+			optionText.isMenuItem = true;
+			if (isCentered)
+			{
+				optionText.screenCenter(X);
+				optionText.forceX = optionText.x;
+			}
+			else
+			{
+				optionText.x += 200;
+				optionText.forceX = 200;
+			}
+			optionText.yMult = 90;
+			optionText.targetY = i;
+			grpOptions.add(optionText);
+			
+
+			if (!isCentered)
+			{
+				var useCheckbox:Bool = true;
+				for (j in 0...noCheckbox.length)
+					{
+						if (options[i] == noCheckbox[j])
+						{
+							useCheckbox = false;
+							break;
+						}
+					}
+				if (useCheckbox)
+				{
+					var checkbox:CheckboxThingie = new CheckboxThingie(optionText.x - 105, optionText.y, false);
+					checkbox.sprTracker = optionText;
+					checkboxArray.push(checkbox);
+					checkboxNumber.push(i);
+					add(checkbox);
+				}
+				else
+				{
+					var valueText:AttachedText = new AttachedText('<Example Text>', optionText.width + 80);
+					valueText.color = 0xCECECE;
+					valueText.sprTracker = optionText;
+					grpTexts.add(valueText);
+					textNumber.push(i);
+				}
+			}
+		}
+
+		descText = new FlxText(50, 600, 1180, "", 32);
+		descText.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		descText.scrollFactor.set();
+		descText.borderSize = 2.4;
+		add(descText);
+
+		for (i in 0...options.length)
+		{
+			if (!unselectableCheck(i))
+			{
+				curSelected = i;
+				break;
+			}
+		}
+		changeSelection();
+		reloadValues();
+	}
+
+	var nextAccept:Int = 5;
+	var holdTime:Float = 0;
+
+	override function update(elapsed:Float)
+	{
+		if (FlxG.keys.justPressed.UP)
+		{
+			changeSelection(-1);
+		}
+		if (FlxG.keys.justPressed.DOWN)
+		{
+			changeSelection(1);
+		}
+
+		if (controls.BACK)
+		{
+			grpOptions.forEachAlive(function(spr:Alphabet)
+			{
+				spr.alpha = 0;
+			});
+			grpTexts.forEachAlive(function(spr:AttachedText)
+			{
+				spr.alpha = 0;
+			});
+			for (i in 0...checkboxArray.length)
+			{
+				var spr:CheckboxThingie = checkboxArray[i];
+				if (spr != null)
+				{
+					spr.alpha = 0;
+				}
+			}
+			descText.alpha = 0;
+			close();
+			FlxG.sound.play(Paths.sound('cancelMenu'));
+		}
+
+		var usesCheckbox = true;
+
+		if (usesCheckbox)
+		{
+			if (controls.ACCEPT && nextAccept <= 0)
+			{
+				switch (options[curSelected])
+				{
+					case 'Enable Sticky Strums':
+						ClientPrefs.stickyNotes = !ClientPrefs.stickyNotes;
+				}
+				FlxG.sound.play(Paths.sound('scrollMenu'));
+				reloadValues();
+			}
+			}
+
+		if (nextAccept > 0)
+		{
+			nextAccept -= 1;
+		}
+		super.update(elapsed);
+	}
+
+	function changeSelection(change:Int = 0)
+	{
+		do
+		{
+			curSelected += change;
+			if (curSelected < 0)
+				curSelected = options.length - 1;
+			if (curSelected >= options.length)
+				curSelected = 0;
+		}
+		while (unselectableCheck(curSelected));
+
+		var daText:String = '';
+		switch (options[curSelected])
+		{
+			case 'Enable Sticky Strums':
+				daText = "BASICALLY, You put the notes onto the character itself, in the stage rather then the HUD";
+		}
+		descText.text = daText;
+
+		var bullShit:Int = 0;
+
+		for (item in grpOptions.members)
+		{
+			item.targetY = bullShit - curSelected;
+			bullShit++;
+
+			if (!unselectableCheck(bullShit - 1))
+			{
+				item.alpha = 0.4; item.color = 0xFF680F0F;
+				if (item.targetY == 0)
+				{
+					item.alpha = 1; item.color = 0xFFFF0000;
+				}
+
+				for (j in 0...checkboxArray.length)
+				{
+					var tracker:FlxSprite = checkboxArray[j].sprTracker;
+					if (tracker == item)
+					{
+						checkboxArray[j].alpha = item.alpha;
+						break;
+					}
+				}
+			}
+		}
+		for (i in 0...grpTexts.members.length)
+		{
+			var text:AttachedText = grpTexts.members[i];
+			if (text != null)
+			{
+				text.alpha = 0.4; text.color = 0xFF680F0F;
+				if (textNumber[i] == curSelected)
+				{
+					text.alpha = 1; text.color = 0xFFFF0000;
+				}
+			}
+		}
+		FlxG.sound.play(Paths.sound('scrollMenu'));
+	}
+
+	function reloadValues()
+	{
+		for (i in 0...checkboxArray.length)
+		{
+			var checkbox:CheckboxThingie = checkboxArray[i];
+			if (checkbox != null)
+			{
+				var daValue:Bool = false;
+				switch (options[checkboxNumber[i]])
+				{
+					case 'Enable Sticky Strums':
+						daValue = ClientPrefs.stickyNotes;
+				}
+				checkbox.daValue = daValue;
 			}
 		}
 	}

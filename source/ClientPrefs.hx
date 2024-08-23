@@ -54,6 +54,9 @@ class ClientPrefs {
 	public static var secretSave:Array<Bool> = [false, false, false, false, false, false];
 											//World 2[0] | World 3[1] | World 4[2] | World 5[3] | World 6[4] | World ?/Secret [5]
 	public static var secretSeen:Array<Bool> = [false, false, false, false, false, false];
+	public static var firstView:Bool = true;
+
+	public static var stickyNotes:Bool = false;
 
 	public static var defaultKeys:Array<FlxKey> = [
 		        A,   LEFT, // Note Left
@@ -142,6 +145,8 @@ class ClientPrefs {
 		FlxG.save.data.vramSprites = vramSprites;
 		FlxG.save.data.secretSave = secretSave;
 		FlxG.save.data.secretSeen = secretSeen;
+		FlxG.save.data.firstView = firstView;
+		FlxG.save.data.stickyNotes = stickyNotes;
 
 		FlxG.save.flush();
 
@@ -262,6 +267,12 @@ class ClientPrefs {
 		}
 		if (FlxG.save.data.secretSeen != null) {
 			secretSeen = FlxG.save.data.secretSeen;
+		}
+		if (FlxG.save.data.firstView != null) {
+			firstView = FlxG.save.data.firstView;
+		}
+		if (FlxG.save.data.stickyNotes != null) {
+			stickyNotes = FlxG.save.data.stickyNotes;
 		}
 
 

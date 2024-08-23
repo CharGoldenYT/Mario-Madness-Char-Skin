@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TextureAtlas imagePath="booMario_NOTE_assets.png">
+	<!-- Created with Adobe Animate version 22.0.5.191 -->
+	<!-- http://www.adobe.com/products/animate.html -->
+	<SubTexture name="blue hold end0000" x="0" y="0" width="63" height="65"/>
+	<SubTexture name="blue hold piece0000" x="68" y="0" width="63" height="50"/>
+	<SubTexture name="blue0000" x="136" y="0" width="158" height="158"/>
+	<SubTexture name="green hold end0000" x="299" y="0" width="63" height="65"/>
+	<SubTexture name="green hold piece0000" x="367" y="0" width="63" height="50"/>
+	<SubTexture name="green0000" x="0" y="163" width="158" height="158"/>
+	<SubTexture name="pruple end hold0000" x="163" y="163" width="63" height="65"/>
+	<SubTexture name="purple hold piece0000" x="231" y="163" width="63" height="50"/>
+	<SubTexture name="purple0000" x="299" y="163" width="158" height="158"/>
+	<SubTexture name="red hold end0000" x="0" y="326" width="63" height="65"/>
+	<SubTexture name="red hold piece0000" x="68" y="326" width="63" height="50"/>
+	<SubTexture name="red0000" x="136" y="326" width="158" height="158"/>
+</TextureAtlas>

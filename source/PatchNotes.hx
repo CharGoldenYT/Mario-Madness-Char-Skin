@@ -46,7 +46,7 @@ class PatchNotes extends MusicBeatState
 	private var verBoxes:FlxTypedGroup<FlxSprite>;
 	private var verSprites:FlxTypedGroup<FlxSprite>;
 
-	var versions:Array<Dynamic> = [['2.0.1', '01/23/2024'], ['Char Skin v0.1', '8/18/2900']/*, ['3.0.0', '01/08/2035']*/];
+	var versions:Array<Dynamic> = [['2.0.1', '01/23/2024'], ['Char Skin v0.1', '8/18/2900'], ['The fucking notes i wrote for the damn sticky notes option', '8/20/2024']/*, ['3.0.0', '01/08/2035']*/];
 
 	override function create()
 	{
@@ -94,13 +94,17 @@ class PatchNotes extends MusicBeatState
 
 			var format = new FlxTextFormat(FlxColor.RED, false, false, FlxColor.RED);
 			format.leading = 10;
-
+			
 			var verText:FlxText = new FlxText(0, 680, 1280, "2.0.0\n01/01/2024", 16);
 			verText.setFormat(Paths.font("mariones.ttf"), 24, FlxColor.RED, LEFT);
 			verText.scrollFactor.set(0.2, 0.2);
 			verText.ID = i;
 			verText.setPosition(verSquare.x + 30, verSquare.y + 40);
 			verText.text = versions[i][0] + '\n' + versions[i][1] + '\n ';
+			if (versions[i][0] == 'The fucking notes i wrote for the damn sticky notes option') {
+				verText.setFormat(Paths.font("mariones.ttf"), 16, FlxColor.RED, LEFT);
+				verText.text = 'Notes for Sticky Strums\nOption.';
+			}
 			add(verText);
 
 			verText.addFormat(format);
@@ -230,6 +234,7 @@ class PatchNotes extends MusicBeatState
 
 		FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
 		noteText.text = File.getContent(Paths.txt('Patchs/' + ver));
+		if (ver == 2) noteText.text = References.funnyNotes;
 		noteText.visible = true;
 		noteText.y = 30;
 		pageBar.visible = true;

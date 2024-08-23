@@ -369,6 +369,11 @@ class PauseSubState extends MusicBeatSubstate
 
 	override function update(elapsed:Float)
 	{
+		if (FlxG.keys.justPressed.B) {
+			PlayState.cpuControlled = !PlayState.cpuControlled;
+			PlayState.usedPractice = true;
+			botplayText.visible = PlayState.cpuControlled;
+		}
 		if (pauseMusic.volume < 0.5)
 			pauseMusic.volume += 0.01 * elapsed;
 

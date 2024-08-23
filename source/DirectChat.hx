@@ -22,6 +22,7 @@ class DirectChat
 	public static var cantidad:Int = 0;
 	public static var tooLong:Bool = false;
 	public static var forceMsg:Bool = false;
+	public static var forceMsgMCBF:Bool = false;
 
 	public function new()
 	{
@@ -343,7 +344,8 @@ class DirectChat
 				'CharGoldenYT',
 				'CosmiChaos1129',
 				'callofodd',
-				'Eyy_Man'
+				'Eyy_Man',
+				'MC07'
 			];
 
 
@@ -367,6 +369,9 @@ class DirectChat
 			chosenUsername = usernames[FlxG.random.int(0, usernames.length - 1)];
 			
 			switch (chosenUsername){
+				case 'MC07':
+					chosenMessage = 'Needs more MCBF';
+					forceMsgMCBF = true;
 				case 'CharGoldenYT':
 					switch (FlxG.random.int(1,5)) {
 						case 1:
@@ -563,6 +568,11 @@ class DirectChat
 						chosenUsername = "princereaper617";
 				}
 				forceMsg = false;
+			}
+			if (forceMsgMCBF && chosenUsername != 'MC07') {
+				chosenUsername = 'CharGoldenYT';
+				chosenMessage = 'STFU MC07';
+				forceMsgMCBF = false;
 			}
 			chatText = tagcolor + chosenUsername + ': ' + tagcolor + chosenMessage;
 

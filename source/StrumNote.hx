@@ -1,5 +1,6 @@
 package;
 
+import flixel.graphics.FlxGraphic;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.graphics.frames.FlxAtlasFrames;
@@ -29,6 +30,15 @@ class StrumNote extends FlxSprite
 
 	private var initWidth:Float;
 
+	public var charStick:Character;
+
+	/**
+	 * Basically what to reference for current animation data.
+	 */
+	public var referenceData:StrumNote;
+
+	public var curSkin:String;
+
 	public function new(x:Float, y:Float, leData:Int, player:Int)
 	{
 		colorSwap = new ColorSwap();
@@ -41,6 +51,8 @@ class StrumNote extends FlxSprite
 		var skin:String = 'Mario_NOTE_assets';
 		if (PlayState.SONG.arrowSkin != null && PlayState.SONG.arrowSkin.length > 1)
 			skin = PlayState.SONG.arrowSkin;
+
+		this.curSkin = skin;
 
 		if (PlayState.isPixelStage)
 		{
@@ -121,6 +133,7 @@ class StrumNote extends FlxSprite
 	}
 
 	public function updateNoteSkin(skin:String){
+		this.curSkin = skin;
 		this.frames = Paths.getSparrowAtlas(skin);
 		this.animation.addByPrefix('green', 'arrowUP');
 		this.animation.addByPrefix('blue', 'arrowDOWN');
@@ -162,6 +175,12 @@ class StrumNote extends FlxSprite
 		ID = noteData;
 	}
 
+	public function postCharStick() {
+		x += Note.swagWidth * noteData;
+		x += 50;
+		x += ((FlxG.width / 2) * player);
+	}
+
 	override function update(elapsed:Float)
 	{
 		if (resetAnim > 0)
@@ -172,6 +191,24 @@ class StrumNote extends FlxSprite
 				playAnim('static');
 				resetAnim = 0;
 			}
+		}
+
+		if (charStick != null){
+			var minusX = player == 1 ? 725 : 0;
+			//var minusY = player == 1 ? 100 : 0;
+			setPosition(charStick.x - minusX, charStick.y - 100/*minusY*/);
+			postCharStick();
+			}
+
+		if (referenceData != null) {
+			if (animation.curAnim.name != referenceData.animation.curAnim.name) {
+				playAnim(referenceData.animation.curAnim.name, true);
+			}
+			if (this.alpha != referenceData.alpha)
+				this.alpha = referenceData.alpha;
+
+			if (this.curSkin != referenceData.curSkin)
+				updateNoteSkin(referenceData.curSkin);
 		}
 
 		/*if(animation.curAnim.name == 'confirm' && !PlayState.isPixelStage) {

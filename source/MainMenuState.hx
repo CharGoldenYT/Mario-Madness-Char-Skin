@@ -133,6 +133,8 @@ class MainMenuState extends MusicBeatState {
 	];
 	public var keyComboProgress:Map<String, Int> = [];
 	public var canUseKeyCombos:Bool = true;
+	var skinPackWarn:FlxSprite;
+	var warnOpen:Bool = false;
 
 	override function create() {
 		#if desktop
@@ -456,6 +458,14 @@ class MainMenuState extends MusicBeatState {
 				warpWhistleSound = new FlxSound().loadEmbedded('mods/sounds/warpWhistle.ogg');
 			}
 
+			if (ClientPrefs.firstView) {
+				skinPackWarn = new FlxSprite().loadGraphic(Paths.image('skinPackWarn'));
+				skinPackWarn.screenCenter();
+				add(skinPackWarn);
+				canselectshit = false;
+				warnOpen = true;
+			}
+
 		super.create();
 		FlxG.mouse.visible = true;
 	}
@@ -480,6 +490,16 @@ class MainMenuState extends MusicBeatState {
 			thetimer.cancel();
 		}
 	}*/
+
+	if (FlxG.keys.justPressed.ENTER && warnOpen) {
+		FlxTween.tween(skinPackWarn, {alpha: 0}, 0.5, {onComplete: function(twn:FlxTween) {
+			skinPackWarn.destroy();
+			ClientPrefs.firstView = false;
+			warnOpen = false;
+			canselectshit = true;
+			ClientPrefs.saveSettings();
+		}});
+	}
 
 		fullTimer += elapsed;
 
@@ -651,6 +671,7 @@ class MainMenuState extends MusicBeatState {
 				ClientPrefs.worldsALT = [0, 2, 0, 3, 0];
 				ClientPrefs.storySave = [for(i in 0... 10) true];
 				ClientPrefs.saveSettings();
+				MusicBeatState.switchState(new MainMenuState());
 			}
 
 			if (FlxG.keys.justPressed.FIVE) {
@@ -658,6 +679,7 @@ class MainMenuState extends MusicBeatState {
 				ClientPrefs.worldsALT = [0, 0, 0, 0, 0];
 				ClientPrefs.storySave = [for(i in 0... 10) false];
 				ClientPrefs.saveSettings();
+				MusicBeatState.switchState(new MainMenuState());
 			}
 			#end
 		}

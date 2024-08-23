@@ -50,6 +50,7 @@ class WarpState extends MusicBeatState
 	public static var blackScreen:FlxSprite;
 	final starNeed:Array<Int> = [3, 7, 5, 6, 3];
 	public static var local_filtersEnabled:Bool = true;
+	public static var reloadWoodland:Bool = false;
 
 	private var grpOptions:FlxTypedGroup<Alphabet>;
 	private var iconArray:Array<AttachedSprite> = [];
@@ -348,6 +349,10 @@ class WarpState extends MusicBeatState
 
 	override function update(elapsed:Float)
 	{
+		if (reloadWoodland) {
+			reloadWoodland = false;
+			goodbyeQuick();
+		}
 		if (FlxG.keys.justPressed.F3) {
 			FlxG.camera.filtersEnabled = !FlxG.camera.filtersEnabled;
 		}
@@ -624,6 +629,10 @@ class WarpState extends MusicBeatState
 		}else{
 			FlxG.sound.play(Paths.sound('wrong'));
 		}
+	}
+
+	function goodbyeQuick(?isUltra:Bool = false){ // only able to be used when in woodland of lies anyway. but ill add this potential value in case i need it.
+		openSubState(new WorldState());
 	}
 
 	public function caminar(direction:String):Void
@@ -1180,6 +1189,12 @@ class WorldState extends MusicBeatSubstate
 					}
 					if(FlxG.keys.justReleased.ONE){
 						thetimer.cancel();
+					}
+					if (FlxG.keys.justPressed.F4 && WarpState.curSelected == 2 && quieto) {
+						ClientPrefs.deathIHY = !ClientPrefs.deathIHY;
+						ClientPrefs.saveSettings();
+						close();
+						WarpState.reloadWoodland = true;
 					}
 
 					if(pibeback.animation.curAnim.name != 'enter' && quieto){

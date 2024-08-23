@@ -106,6 +106,8 @@ class PlayState extends MusicBeatState
 	// event variables
 	private var isCameraOnForcedPos:Bool = false;
 
+	public static var stickNotestoPlayer:Bool = false;
+
 	#if (haxe >= "4.0.0")
 	public var boyfriendMap:Map<String, Boyfriend> = new Map();
 	public var dadMap:Map<String, Character> = new Map();
@@ -196,6 +198,13 @@ class PlayState extends MusicBeatState
 	public var opponentStrums:FlxTypedGroup<StrumNote>;
 	public var playerStrums:FlxTypedGroup<StrumNote>;
 	public var grpNoteSplashes:FlxTypedGroup<NoteSplash>;
+
+	// For Sticking notes to the player while keeping it in one place.
+	public var fakeStrums:FlxTypedGroup<StrumNote>;
+	public var fakeOppStrums:FlxTypedGroup<StrumNote>;
+	public var fakeSplashes:FlxTypedGroup<NoteSplash>;
+	public var fakeNotes:FlxTypedGroup<Note>;
+	public var tweenFaketoReal:FlxTween;
 
 	public static var camDisplaceX:Float = 0;
 	public static var camDisplaceY:Float = 0;
@@ -549,6 +558,8 @@ class PlayState extends MusicBeatState
 	var yourhead:BGSprite;
 	var virtuabg:FlxSprite;
 	var effect:SMWPixelBlurShader;
+	var vcr2:CRTShader;
+	var formattedSong:String = ''; 
 
 	var clashmario:FlxTypedGroup<BGSprite>;
 	var vwall:BGSprite;
@@ -809,13 +820,11 @@ class PlayState extends MusicBeatState
 	var luigidies:VideoSprite;
 
 	public static var songIsModcharted:Bool = false;
+	var forceOffStickyStrum:Bool = false; // for certain songs that break at a certain point, or have weird oddities with sticky strum.
 
 	override public function create()
 	{
 		instance = this;
-		#if officialBuild
-		trace('Hi :3');
-		#end
 
 		if (FlxG.sound.music != null)
 			FlxG.sound.music.stop();
@@ -5615,7 +5624,6 @@ class PlayState extends MusicBeatState
 				camEst.setFilters([new ShaderFilter(badRipple)]);
 			}
 		}
-
 		strumLineNotes.cameras = [camHUD];
 		grpNoteSplashes.cameras = [camHUD];
 		notes.cameras = [camHUD];
@@ -5904,6 +5912,27 @@ class PlayState extends MusicBeatState
 		#end
 
 		callOnLuas('onCreatePost', []);
+
+		formattedSong = Paths.formatToSongPath(SONG.song.toLowerCase()).trim();
+		trace('Formatted Song : "$formattedSong"');
+
+		if (formattedSong == 'cam-test') {
+			var belowHud:FlxText = new FlxText(0, 0, 0, "DIS BELOW DA HUD", 40);
+			belowHud.x = FlxG.width - (belowHud.width + 5);
+			belowHud.scrollFactor.set(0, 0);
+			add(belowHud);
+			var height:Float = belowHud.height;
+			var belowHud:FlxText = new FlxText(0, 0, 0, "DIS ABOVE DA HUD", 12);
+			belowHud.x = FlxG.width - (belowHud.width + 5);
+			belowHud.y = 0 + height;
+			belowHud.cameras = [camHUD];
+			add(belowHud);
+			FlxTween.tween(camGame, {zoom: 10}, 5);
+		}
+
+		stickNotestoPlayer = ClientPrefs.stickyNotes;
+		if (formattedSong == 'the-end' || formattedSong == 'powerdown' || formattedSong == 'all-stars-old')
+			forceOffStickyStrum = true;
 
 		super.create();
 	}
@@ -6364,6 +6393,9 @@ class PlayState extends MusicBeatState
 			}
 			else if (curStage == 'landstage')
 			{
+				effect = new SMWPixelBlurShader();
+				vcr2 = new CRTShader();
+				//camGame.setFilters([new ShaderFilter(effect.shader), new ShaderFilter(vcr2)]); // do a funny :3
 				startedCountdown = true;
 				var blackthing = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, FlxColor.BLACK);
 				blackthing.setGraphicSize(Std.int(blackthing.width * 10));
@@ -6391,6 +6423,9 @@ class PlayState extends MusicBeatState
 				}));
 				}
 			else if(curStage == 'hatebg' || curStage == 'forest'){
+				effect = new SMWPixelBlurShader();
+				vcr2 = new CRTShader();
+				//camGame.setFilters([new ShaderFilter(effect.shader), new ShaderFilter(vcr2)]); // do a funny :3
 				if(PlayState.SONG.song == 'Oh God No'){
 				eventTimers.push(new FlxTimer().start(2, function(tmr:FlxTimer)
 					{
@@ -7222,6 +7257,8 @@ class PlayState extends MusicBeatState
 	private var paused:Bool = false;
 	var startedCountdown:Bool = false;
 	var canPause:Bool = true;
+	var switchedToGame:Bool = false;
+	var additiveOffset:Array<Float> = [0, 0]; // for certain songs that arent centering the notes properly
 
 	override public function update(elapsed:Float)
 	{
@@ -8267,17 +8304,133 @@ class PlayState extends MusicBeatState
 				strum.y = pos.y;
 			});
 
+			var scrollF:Int;
+			var isForbidden:Bool = false;
+			var isAllowed:Bool = false;
+			var songArray:Array<String> = [
+				'apparition',
+				'apparation-old',
+				'forbidden-star',
+				'demise',
+				'time-out',
+			];
+					var forceCamera:Bool = false;
+			if (stickNotestoPlayer) {
+					for (song in References.forbiddenStickySongs) {
+						if (!isForbidden){
+							if (formattedSong == song) {
+								isForbidden = true;
+								isAllowed = false;
+							}
+							else {
+								isForbidden = false;
+							}
+						}
+					}
+					for (song in References.allowedStickySongs) {
+						if (formattedSong == song && !isForbidden && !isAllowed) {
+							isAllowed = true;
+							switchedToGame = false;
+						}
+					}
+
+					if (forceOffStickyStrum || isWarp || isStoryMode) { //FREEPLAY ONLY BITCH
+						isAllowed = false;
+						isForbidden = true;
+						switchedToGame = true;
+					}
+					if (formattedSong == 'cam-test') {
+						switchedToGame = !switchedToGame;
+						forceCamera = true;
+					}
+					scrollF = !isAllowed ? 0 : 1;
+
+					for (i in 0...playerStrums.members.length) {
+						if (!forceCamera) {
+						playerStrums.members[i].cameras = !isAllowed ? [camHUD] : [camGame];
+						grpNoteSplashes.cameras = !isAllowed ? [camHUD] : [camGame];
+						opponentStrums.members[i].cameras = formattedSong == 'oh-god-no' ? [camGame] : [camHUD];
+
+
+						playerStrums.members[i].scrollFactor.set(scrollF, scrollF);
+						opponentStrums.members[i].scrollFactor.set(scrollF, scrollF);
+						} else {
+							playerStrums.members[i].cameras = switchedToGame ? [camHUD] : [camGame];
+							grpNoteSplashes.cameras = switchedToGame ? [camHUD] : [camGame];
+							scrollF = switchedToGame ? 0 : 1;
+						}
+
+						if (isAllowed) {
+							if (formattedSong == 'so-cool') additiveOffset[0] = 200;
+							if (formattedSong == 'last-course') additiveOffset = [25, -10];
+							if (formattedSong == 'golden-land') additiveOffset = [175, 0];
+								playerStrums.members[i].x = boyfriend.x - (700 + additiveOffset[0]);
+								if (formattedSong == 'oh-god-no') 
+									if (!ClientPrefs.downScroll)
+										playerStrums.members[i].y = boyfriend.y; 
+								else 
+									if (! ClientPrefs.downScroll || ClientPrefs.downScroll && formattedSong != 'overdue')
+										playerStrums.members[i].y = boyfriend.y - (150 + additiveOffset[1]);
+
+								playerStrums.members[i].postCharStick();
+
+							if (formattedSong == 'oh-god-no') {
+									var yToUse:Float = boyfriend.y;
+									var xToUse:Float = dad.x;
+									if (!ClientPrefs.downScroll) {
+										switch(dad.animation.curAnim.name) {
+										case 'singDOWN':
+											yToUse = boyfriend.y + 200;
+										case 'singUP':
+											//yToUse = boyfriend.y - 150; //This breaks the strumline?????? why does being above Y = 0 make it break?!?!?
+										case 'singRIGHT':
+											yToUse = dad.y - 50;
+											xToUse = dad.x + 20;
+										case 'singLEFT':
+											yToUse = dad.y - 20;
+											xToUse = dad.x - 50;
+									}
+									opponentStrums.members[i].y = yToUse;
+									opponentStrums.members[i].x = xToUse;
+									opponentStrums.members[i].postCharStick();
+									} else {
+										//opponentStrums.members[i].y = FlxG.height;
+										opponentStrums.members[i].x = dad.x;
+										opponentStrums.members[i].postCharStick();
+									}
+							}
+						}
+						for (song in songArray) {
+							if (formattedSong == song) {
+								opponentStrums.members[i].visible = false;
+							}
+						}
+					}
+				}
+
 		if (generatedMusic)
 		{
 			var fakeCrochet:Float = (60 / SONG.bpm) * 1000;
 			notes.forEachAlive(function(daNote:Note)
 			{
+				if (stickNotestoPlayer) {
+					if (daNote.mustPress || formattedSong == 'oh-god-no') {
+						if (!forceCamera) {
+						daNote.cameras = !isAllowed ? [camHUD] : [camGame];
+						daNote.scrollFactor.set(scrollF, scrollF);
+					} else {
+						daNote.cameras = switchedToGame ? [camHUD] : [camGame];
+						daNote.scrollFactor.set(scrollF, scrollF);
+					}
+					}
+				}	
+				var yOffset = isAllowed ? FlxG.height * 2 : FlxG.height;
 				if (!daNote.mustPress && ClientPrefs.middleScroll)
 				{
 					daNote.active = true;
 					if(!songIsModcharted) daNote.visible = false;
 				}
-				else if (daNote.y > FlxG.height)
+				else if (daNote.y > yOffset)
 				{
 					daNote.active = false;
 					daNote.visible = false;
@@ -8286,6 +8439,16 @@ class PlayState extends MusicBeatState
 				{
 					daNote.visible = true;
 					daNote.active = true;
+				}
+				if (!daNote.mustPress) { // for any bugs regarding opponent notes lmao.
+					daNote.active = true;
+				}
+				for (song in songArray) {
+					if (formattedSong == song) {
+						if (!daNote.mustPress) {
+							daNote.visible = false;
+						}
+					}
 				}
 
 				// i am so fucking sorry for this if condition
@@ -9611,7 +9774,7 @@ class PlayState extends MusicBeatState
 							{
 								gfGroup.scrollFactor.set(0.55, 0.55);
 								triggerEventNote('Change Character', '2', 'yoshi-exe');
-								triggerEventNote('Change Character', '0', 'bfexenew');
+								triggerEventNote('Change Character', '0', 'bfexenew'); // i added this event - Char
 								triggerEventNote('Play Animation', 'prepow', 'gf');
 								PauseSubState.muymalo = 2;
 								gfGroup.x = 685;
@@ -9849,6 +10012,7 @@ class PlayState extends MusicBeatState
 								blackBarThingie.alpha = 0;
 								act1Intro.alpha = 0;
 								resyncVocals();
+								forceOffStickyStrum = false;
 						}
 						
 					
@@ -10014,6 +10178,7 @@ class PlayState extends MusicBeatState
 						{
 							case 0:
 								//act 3
+								forceOffStickyStrum = true;
 								resyncVocals();
 
 								titleText.text = 'All-Stars (Act 3)';
@@ -10118,6 +10283,8 @@ class PlayState extends MusicBeatState
 						switch(trigger2)
 						{
 							case 0:
+								forceOffStickyStrum = false;
+								additiveOffset[0] = 150;
 								//act 4
 								resyncVocals();
 								titleText.text = 'All-Stars (Act 4)';
@@ -10204,6 +10371,7 @@ class PlayState extends MusicBeatState
 								insert(members.indexOf(act4Floaters) + 1, dadGroup);
 								insert(members.indexOf(blackBarThingie) + 1, act4Intro);
 							case 1:
+								forceOffStickyStrum = true;
 								//sad perspective transition
 								BF_CAM_X = 1000;
 								BF_CAM_Y = 550;
@@ -11073,6 +11241,7 @@ class PlayState extends MusicBeatState
 						}
 						else
 						{
+							forceOffStickyStrum = true;
 							eventTweens.push(FlxTween.tween(blackBarThingie, {alpha: 1}, 1, {
 								onComplete: function(twn:FlxTween)
 								{
@@ -11186,6 +11355,7 @@ class PlayState extends MusicBeatState
 						gfGroup.y -= 170;
 						enemyY = dad.y;
 						lightmx.visible = false;
+						forceOffStickyStrum = false;
 
 					case 6:
 						if(ClientPrefs.filtro85) eventTweens.push(FlxTween.tween(estatica, {alpha: 1}, 2.5));
@@ -11196,6 +11366,7 @@ class PlayState extends MusicBeatState
 						{
 							midsongVid.visible = false;
 							FlxG.camera.flash(FlxColor.RED, 1);
+							forceOffStickyStrum = false;
 						}
 				}
 
@@ -11217,6 +11388,7 @@ class PlayState extends MusicBeatState
 							}}));
 
 					case 1:
+						forceOffStickyStrum = true;
 						demisetran.x = -1600;
 						eventTweens.push(FlxTween.tween(demisetran, {x: 2600}, 1.4));
 						eventTimers.push(new FlxTimer().start(2 * (1 / (Conductor.bpm / 60)), function(tmr:FlxTimer)
@@ -11238,9 +11410,11 @@ class PlayState extends MusicBeatState
 								demFore2.visible = 			false;
 								demFore3.visible = 			false;
 								demFore4.visible = 			false;
+								forceOffStickyStrum = false;
 							}));
 
 					case 2:
+						forceOffStickyStrum = true;
 						demisetran.x = -1600;
 						eventTweens.push(FlxTween.tween(demisetran, {x: 2600}, 1.4));
 
@@ -11263,6 +11437,7 @@ class PlayState extends MusicBeatState
 								demFore2.visible = 			true;
 								demFore3.visible = 			true;
 								demFore4.visible = 			true;
+								forceOffStickyStrum = false;
 							}));
 
 					case 3:
@@ -11460,14 +11635,15 @@ class PlayState extends MusicBeatState
 						triggerEventNote('Play Animation', 'prejump', 'boyfriend');
 					case 6:
 						triggerEventNote('Play Animation', 'spin', 'boyfriend');
-						eventTweens.push(FlxTween.tween(boyfriendGroup, {y: -100}, 0.2, {ease: FlxEase.quadOut, onComplete: function(twn:FlxTween)
+						/*eventTweens.push(FlxTween.tween(boyfriendGroup, {y: -100}, 0.2, {ease: FlxEase.quadOut, onComplete: function(twn:FlxTween)
 							{
 								eventTweens.push(FlxTween.tween(boyfriendGroup, {y: 60}, 0.2, {ease: FlxEase.quadIn}));
-							}}));
+							}}));*/
 
 
-						eventTweens.push(FlxTween.tween(boyfriendGroup, {x: 50}, 0.4, {onComplete: function(twn:FlxTween)
-							{
+						//eventTweens.push(FlxTween.tween(boyfriendGroup, {x: 50}, 0.4, {onComplete: function(twn:FlxTween)
+							//{
+							var timer:FlxTimer = new FlxTimer().start(0.4, function(tmr:FlxTimer) {
 								triggerEventNote('Play Animation', 'attack', 'boyfriend');
 								triggerEventNote('Play Animation', 'fall', 'dad');
 								triggerEventNote('Screen Shake', '0.15, 0.007', '0.15, 0.007');
@@ -11485,7 +11661,7 @@ class PlayState extends MusicBeatState
 
 											});
 									}}));
-							}}));
+							});//}}));
 
 							new FlxTimer().start((7 * (1 / (Conductor.bpm / 60))), function(tmr:FlxTimer)
 								{
@@ -13109,6 +13285,7 @@ class PlayState extends MusicBeatState
 							camHUD.alpha = 0;
 						});
 					case 1:
+						forceOffStickyStrum = true;
 						promoBG.visible = false;
 						promoBGSad.visible = false;
 						promoDesk.visible = false;
@@ -13321,6 +13498,7 @@ class PlayState extends MusicBeatState
 					trigger = 0;
 				if (Math.isNaN(trigger2))
 					trigger2 = 0;
+				forceOffStickyStrum = true;
 				
 				switch (trigger)
 				{
@@ -13333,6 +13511,7 @@ class PlayState extends MusicBeatState
 						eventTweens.push(FlxTween.tween(elfin, {alpha: 0}, 4));
 					case 2:
 						// 32
+						forceOffStickyStrum = false;
 						blackBarThingie.alpha = 0.6;
 						camHUD.alpha = 1;
 						elfin.visible = false;
@@ -13343,10 +13522,12 @@ class PlayState extends MusicBeatState
 						// 58
 						eventTweens.push(FlxTween.tween(blackBarThingie, {alpha: 1}, 0.8));
 					case 5:
+						forceOffStickyStrum = true;
 						// 60
 						letsago.alpha = 1;
 						letsago.animation.play('go');
 					case 6:
+						forceOffStickyStrum = false;
 						// 64
 						PauseSubState.muymalo = 2;
 						letsago.alpha = 0;
@@ -13375,6 +13556,7 @@ class PlayState extends MusicBeatState
 						boyfriend.visible = false;
 						blackBarThingie.alpha = 0;
 					case 9.5:
+						forceOffStickyStrum = true;
 						triggerEventNote('Triggers Universal', '9', '');
 						triggerEventNote('Change Character', '1', 'costumedark');
 						triggerEventNote('Play Animation', 'wahoo', 'dad');
@@ -13402,6 +13584,7 @@ class PlayState extends MusicBeatState
 						triggerEventNote('Play Animation', 'talk', 'Dad');
 
 					case 1: //GO TO THE TREEHOUSE
+					forceOffStickyStrum = true;
 						for (tween in extraTween)
 						{
 							tween.cancel();
@@ -13493,6 +13676,8 @@ class PlayState extends MusicBeatState
 							extraTween.push(FlxTween.tween(dadGroup, {y: enemyY - 100}, 1.4, {ease: FlxEase.quadInOut, type: PINGPONG}));
 						}));
 						eventTweens.push(FlxTween.tween(fogred, {alpha: 0.8}, 0.5, {ease: FlxEase.quadOut}));
+
+						forceOffStickyStrum = false;
 
 					case 3:
 						if (ClientPrefs.flashing)
@@ -13757,6 +13942,7 @@ class PlayState extends MusicBeatState
 						// set the mult timer
 						if (ClientPrefs.flashing) dupeTimer = Std.parseInt(value2);
 					case 9:
+						forceOffStickyStrum = true;
 						// set the mult max b4 returning to zero
 						//ahhh im dupemaxxing!! im dupemaxxing!!!
 						if (ClientPrefs.flashing) dupeMax =  Std.parseInt(value2);
@@ -15354,7 +15540,7 @@ class PlayState extends MusicBeatState
 	function noteMissPress(direction:Int = 1, ?ghostMiss:Bool = false):Void // You pressed a key when there was no notes to press for this key
 	{
 		if (ClientPrefs.ghostTapping)
-			return // PISS OFF, I WANNA GHOST TAP WITHOUT IT CAUSING A STUPID ASS MISS EVERY TIME THERES A NOTE ALSO THERE (maybe a later psych fixed this, but this uses 0.4.2 :shrug:).
+			return; // PISS OFF, I WANNA GHOST TAP WITHOUT IT CAUSING A STUPID ASS MISS EVERY TIME THERES A NOTE ALSO THERE (maybe a later psych fixed this, but this uses 0.4.2 :shrug:).
 
 		if (!boyfriend.stunned)
 		{

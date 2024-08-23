@@ -227,6 +227,20 @@ class CustomFreeplayState extends MusicBeatSubstate
 
 	function goToState()
 	{
+		var warnMessage = ClientPrefs.stickyNotes ? '\nThis song may be more difficult with Sticky Strums!' : '';
+		var notAllowed = ClientPrefs.stickyNotes ? '\nThis song does not support Sticky Strums.' : '';
+		var mixed = ClientPrefs.stickyNotes ? '\nThis song supports Sticky Strums, but may disable in certain parts' : '';
+		var allowed = ClientPrefs.stickyNotes ? '\nThis song supports Sticky Strums' : '';
+		var camTest = ClientPrefs.stickyNotes ? '\nFuck You :3' : '';
+
+		if (ClientPrefs.downScroll && ClientPrefs.stickyNotes) {
+			var downScroll:String = '\nSticky Strums was not coded for Downscroll in mind and may be extra difficult!';
+			warnMessage += downScroll;
+			mixed += downScroll;
+			allowed += downScroll;
+			camTest += downScroll;
+		}
+
 		MainMenuState.instance.WEHOVERING = false;
 		for (item in grpOptions.members)
 		{
@@ -241,74 +255,75 @@ class CustomFreeplayState extends MusicBeatSubstate
 		{
 			case 'Mainweek':
 				canciones = [
-					["It's a me", 'its-a-me', '26'],
-					["Starman Slaughter", 'starman-slaughter', '34'],
+					["It's a me" + warnMessage, 'its-a-me', '26'],
+					["Starman Slaughter" + notAllowed, 'starman-slaughter', '34'],
 				];
 				if(ClientPrefs.storySave[7]){
-					canciones.push(['All-Stars', 'all-stars', '9']);
+					canciones.push(['All-Stars' + mixed, 'all-stars', '9']);
 				}
 			case 'Island':
 				canciones = [
-					['So Cool', 'so-cool', '8'],
-					['Nourishing Blood', 'nourishing-blood', '16'],
-					['MARIO SING AND GAME RYTHM 9', 'mario-sing-and-game-rythm-9', '13']
+					['So Cool' + warnMessage, 'so-cool', '8'],
+					['Nourishing Blood' + notAllowed, 'nourishing-blood', '16'],
+					['MARIO SING AND GAME RYTHM 9' + notAllowed, 'mario-sing-and-game-rythm-9', '13']
 				];
 			case 'Woodland':
 				canciones = [
-					['Alone', 			'alone', 			'22'],
-					['Oh God No', 		'oh-god-no', 		'21'],
-					['I Hate You', 		'i-hate-you', 		'25'],
-					['Thalassophobia',	'thalassophobia',   '31'],
-					['Apparition', 		'apparition', 		'24'],
-					['Last Course',		'last-course',      '18'],
-					['Dark Forest', 	'dark-forest', 		'17']
+					['Alone' + notAllowed, 			'alone', 			'22'],
+					['Oh God No' + allowed, 		'oh-god-no', 		'21'],
+					['I Hate You' + notAllowed, 		'i-hate-you', 		'25'],
+					['Thalassophobia' + notAllowed,	'thalassophobia',   '31'],
+					['Apparition' + allowed, 		'apparition', 		'24'],
+					['Last Course' + warnMessage,		'last-course',      '18'],
+					['Dark Forest' + mixed, 	'dark-forest', 		'17']
 				];			
 
 			case 'Cosmos':
 				canciones = [
-					['Bad Day', 		'bad-day', 		'12'],
-					['Day Out', 		'day-out', 		'10'],
-					['Dictator', 		'dictator', 	'11'],
-					['Race-traitors', 	'racetraitors', '20'],
-					['No Hope',			'no-hope',      '19']
+					['Bad Day' + notAllowed, 		'bad-day', 		'12'],
+					['Day Out' + notAllowed, 		'day-out', 		'10'],
+					['Dictator' + notAllowed, 		'dictator', 	'11'],
+					['Race-traitors' + notAllowed, 	'racetraitors', '20'],
+					['No Hope' + notAllowed,			'no-hope',      '19']
 				];
 			case 'Heights':
 				canciones = [
-					['Golden Land', 'golden-land', '28'],
-					['No Party',		'no-party',         '30'],
-					['Paranoia', 'paranoia', '41'],
-					['Overdue',		'overdue',         '35'],
-					['Powerdown', 'powerdown', '27'],
-					['Demise', 'demise', '23']
+					['Golden Land' + warnMessage, 'golden-land', '28'],
+					['No Party' + notAllowed,		'no-party',         '30'],
+					['Paranoia' + mixed, 'paranoia', '41'],
+					['Overdue' + warnMessage,		'overdue',         '35'],
+					['Powerdown' + warnMessage, 'powerdown', '27'],
+					['Demise' + warnMessage, 'demise', '23']
 				];
 
 			case 'Classified':
 				canciones = [
-					['Promotion', 'promotion', 	'15'],
-					['Abandoned', 'abandoned', 	'32'],
-					['The End', 'the-end', 		'33']
+					['Promotion' + warnMessage, 'promotion', 	'15'],
+					['Abandoned' + notAllowed, 'abandoned', 	'32'],
+					['The End' + warnMessage, 'the-end', 		'33']
 				];
 			
 			case 'Legacy':
 				canciones = [
-					["It's a me (Original)", 'its-a-me-old', 		'1'],
-					['Golden Land (Original)', 'golden-land-old', 	'2'],
-					['I Hate You (Original)', 'i-hate-you-old', 	'3'],
-					['Powerdown (Original)', 'powerdown-old', 		'4'],
-					['Apparition (Original)', 'apparition-old', 	'5'],
-					['Forbidden Star', 'forbidden-star', 			'39'],
-					['Alone (Original)', 'alone-old', 				'6'],
-					['Race-traitors (Original)', 'racetraitors-old', '7']
+					["It's a me (Original)" + notAllowed, 'its-a-me-old', 		'1'],
+					['Golden Land (Original)' + notAllowed, 'golden-land-old', 	'2'],
+					['I Hate You (Original)' + notAllowed, 'i-hate-you-old', 	'3'],
+					['Powerdown (Original)' + notAllowed, 'powerdown-old', 		'4'],
+					['Apparition (Original)' + allowed, 'apparition-old', 	'5'],
+					['Forbidden Star' + allowed, 'forbidden-star', 			'39'],
+					['Alone (Original)' + notAllowed, 'alone-old', 				'6'],
+					['Race-traitors (Original)' + notAllowed, 'racetraitors-old', '7']
 				];
 
 			case 'Extra':
 				canciones = [
-					['Unbeatable', 'unbeatable', '14'],
-					['Dictator (Original)', 		'dictator-old', 	'42'],
-					['No Party (Original)', 'no-party-old', '36'],
-					['Overdue (Original)', 'overdue-old', '37'],
-					['Time Out (Demise Original)', 'demise-old', '40'],
-					['All Stars Act 1 (Original)', 'all-stars-old', '38']
+					['Unbeatable' + notAllowed, 'unbeatable', '14'],
+					['Dictator (Original)' + notAllowed, 		'dictator-old', 	'42'],
+					['No Party (Original)' + notAllowed, 'no-party-old', '36'],
+					['Overdue (Original)' + notAllowed, 'overdue-old', '37'],
+					['Time Out (Demise Original)' + notAllowed, 'demise-old', '40'],
+					['All Stars Act 1 (Original)' + allowed, 'all-stars-old', '38'],
+					['Camera Test' + camTest, 'cam-test', '69']
 				];				
 		}
 		openSubState(new FreeplaySubState());
