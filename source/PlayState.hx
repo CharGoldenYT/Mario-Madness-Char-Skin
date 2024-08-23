@@ -8363,7 +8363,8 @@ class PlayState extends MusicBeatState
 						if (isAllowed) {
 							if (formattedSong == 'so-cool') additiveOffset[0] = 200;
 							if (formattedSong == 'last-course') additiveOffset = [25, -10];
-							if (formattedSong == 'golden-land') additiveOffset = [175, 0];
+							if (formattedSong == 'golden-land') additiveOffset[0] = 175;
+							if (formattedSong == 'powerdown' && !ClientPrefs.downScroll) additiveOffset[1] = 100; // GOD do you get little reaction time if its opponents turn
 								playerStrums.members[i].x = boyfriend.x - (700 + additiveOffset[0]);
 								if (formattedSong == 'oh-god-no') {
 									if (!ClientPrefs.downScroll)
